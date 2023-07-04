@@ -1,8 +1,9 @@
-import { Grid, Show, GridItem, SimpleGrid } from "@chakra-ui/react";
+import { Grid, Show, GridItem, Box } from "@chakra-ui/react";
 import Aside from "./components/Aside";
 import NavBar from "./components/NavBar";
-import QuarterCard from "./components/QuarterCard";
-import Banner from "./components/Banner";
+import DayForm from "./components/DayForm";
+import LessonForm from "./components/LessonForm";
+import QuarterForm from "./components/QuarterForm";
 
 function App() {
   return (
@@ -20,20 +21,12 @@ function App() {
           </GridItem>
         </Show>
         <GridItem gridArea="main">
-          <>
+          <Box padding="2px">
             <NavBar />
-            <Banner />
-            <SimpleGrid
-              columns={{ sm: 1, md: 2, lg: 2, xl: 3 }}
-              spacing={6}
-              padding={"10px"}
-            >
-              <QuarterCard />
-              <QuarterCard />
-              <QuarterCard />
-              <QuarterCard />
-            </SimpleGrid>
-          </>
+            <DayForm />
+            <LessonForm />
+            <QuarterForm />
+          </Box>
         </GridItem>
       </Grid>
     </>

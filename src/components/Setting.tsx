@@ -10,6 +10,7 @@ import {
   VStack,
   Avatar,
   Divider,
+  useColorMode,
 } from "@chakra-ui/react";
 import { useRef } from "react";
 import ColorModeSwitch from "./ColorModeSwitch";
@@ -23,6 +24,11 @@ interface Props {
 const Setting = ({ isOpen, onClose }: Props): JSX.Element => {
   const btnRef = useRef<HTMLButtonElement | null>(null);
 
+  const { colorMode } = useColorMode();
+  const isDarkMode = colorMode === "dark";
+
+  const bgColor = isDarkMode ? "#202123" : "white";
+
   return (
     <Drawer
       isOpen={isOpen}
@@ -31,7 +37,11 @@ const Setting = ({ isOpen, onClose }: Props): JSX.Element => {
       finalFocusRef={btnRef}
     >
       <DrawerOverlay />
-      <DrawerContent mt={"10px"} style={{ width: "400px", height: "98vh" }}>
+      <DrawerContent
+        mt={"10px"}
+        style={{ width: "400px", height: "98vh" }}
+        bg={bgColor}
+      >
         <DrawerHeader mt="3">
           <VStack spacing={1}>
             <Box ml={"10px"}>

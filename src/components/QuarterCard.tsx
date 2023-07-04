@@ -1,3 +1,4 @@
+import cover from "../images/cover.png";
 import {
   Card,
   Stack,
@@ -28,7 +29,7 @@ const QuarterCard = () => {
             maxH={"290"}
             maxW={"160"}
             boxSize={"100%"}
-            src="src/assets/cover.png"
+            src={cover}
             alt="Green double couch with wooden legs"
             borderRadius="lg"
           />

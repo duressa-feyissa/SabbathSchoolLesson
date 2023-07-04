@@ -1,3 +1,4 @@
+import logo from "../images/logo.jpg";
 import {
   Box,
   Text,
@@ -27,7 +28,7 @@ const Aside = () => {
     >
       <HStack width={"200px"}>
         <Image
-          src="src/assets/logo.jpg"
+          src={logo}
           alt="logo"
           objectFit="cover"
           width="70px"
@@ -61,7 +62,7 @@ const Aside = () => {
               >
                 <HStack paddingY="5px">
                   <Image
-                    src="src/assets/logo.jpg"
+                    src={logo}
                     boxSize="32px"
                     objectFit="cover"
                     borderRadius={8}
