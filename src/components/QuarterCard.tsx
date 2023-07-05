@@ -1,13 +1,14 @@
-import cover from "../images/cover.png";
 import {
+  Box,
   Card,
-  Stack,
   Heading,
   Image,
   Text,
-  Flex,
-  VStack,
+  Badge,
+  HStack,
+  useColorMode,
 } from "@chakra-ui/react";
+import cover from "../images/cover.png";
 
 const quarter = {
   title: "የእግዚአብሔርን ተልዕኮ በማካፈል የሚገኝ ደስታ",
@@ -21,29 +22,41 @@ const quarter = {
 };
 
 const QuarterCard = () => {
+  const { colorMode } = useColorMode();
+  const isDarkMode = colorMode === "dark";
+  const score = "04";
   return (
-    <Card direction={{ base: "column", sm: "row" }} padding={3}>
-      <VStack>
-        <Flex gap={3}>
+    <Card>
+      <Box p={3}>
+        <Text fontSize="14px" textAlign="justify">
           <Image
-            maxH={"290"}
-            maxW={"160"}
-            boxSize={"100%"}
             src={cover}
-            alt="Green double couch with wooden legs"
+            w="130px"
+            h="175px"
+            float="left"
             borderRadius="lg"
+            pr={3}
           />
-          <Stack>
-            <Heading fontSize={"18px"} textAlign={"center"}>
-              {quarter.title}
-            </Heading>
-            <Text fontSize={"11"} textAlign={"justify"}>
-              {quarter.description}
-            </Text>
-          </Stack>
-        </Flex>
-        <Text color={quarter.color_primary}>{quarter.human_date}</Text>
-      </VStack>
+          <Heading fontSize="22px" textAlign="center" mb={3}>
+            {quarter.title}
+          </Heading>
+          <Text lineHeight="1.5" color={isDarkMode ? "gray.100" : ""}>
+            {quarter.description}
+          </Text>
+        </Text>
+        <HStack justify="space-between" mt={3}>
+          <Text
+            color={isDarkMode ? "green.200" : "green.700"}
+            fontSize="16px"
+            mb={2}
+          >
+            {quarter.human_date}
+          </Text>
+          <Badge colorScheme="green" fontSize="23px" borderRadius="4px">
+            {score}
+          </Badge>
+        </HStack>
+      </Box>
     </Card>
   );
 };

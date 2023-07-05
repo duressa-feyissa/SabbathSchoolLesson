@@ -2,7 +2,6 @@ import { useState, ChangeEvent, FormEvent } from "react";
 import {
   Box,
   Button,
-  Container,
   FormControl,
   FormLabel,
   Heading,
@@ -84,7 +83,7 @@ const DayForm = () => {
   };
 
   return (
-    <Container maxWidth="lg" py={8}>
+    <Box w={{ base: "100%", lg: "60%" }}>
       <Box p={6} borderRadius="md" boxShadow="md">
         <Heading textAlign="center" mb={4}>
           Day
@@ -170,7 +169,7 @@ const DayForm = () => {
           </Stack>
         </form>
       </Box>
-    </Container>
+    </Box>
   );
 };
 

@@ -1,14 +1,14 @@
-import { Grid, Show, GridItem, Box } from "@chakra-ui/react";
+import { Grid, Show, GridItem } from "@chakra-ui/react";
 import Aside from "./components/Aside";
 import NavBar from "./components/NavBar";
-import DayForm from "./components/DayForm";
-import LessonForm from "./components/LessonForm";
-import QuarterForm from "./components/QuarterForm";
+import Lesson from "./components/Lesson";
+import Day from "./components/Day";
 
 function App() {
   return (
     <>
       <Grid
+        width={"100%"}
         templateAreas={{
           base: `"main"`,
           lg: `"aside main"`,
@@ -21,12 +21,8 @@ function App() {
           </GridItem>
         </Show>
         <GridItem gridArea="main">
-          <Box padding="2px">
-            <NavBar />
-            <DayForm />
-            <LessonForm />
-            <QuarterForm />
-          </Box>
+          <NavBar />
+          <Day />
         </GridItem>
       </Grid>
     </>

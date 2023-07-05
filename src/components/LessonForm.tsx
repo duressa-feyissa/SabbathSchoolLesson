@@ -2,7 +2,6 @@ import { useState, ChangeEvent, FormEvent } from "react";
 import {
   Box,
   Button,
-  Container,
   FormControl,
   FormLabel,
   Heading,
@@ -58,8 +57,8 @@ const LessonForm = () => {
   };
 
   return (
-    <Container maxWidth="lg" py={8}>
-      <Box p={6} borderRadius="md" boxShadow="md">
+    <Box w={{ base: "100%", lg: "60%" }}>
+      <Box p={6}>
         <Heading mb={4} textAlign={"center"}>
           Lesson
         </Heading>
@@ -128,7 +127,7 @@ const LessonForm = () => {
           </Stack>
         </form>
       </Box>
-    </Container>
+    </Box>
   );
 };
 

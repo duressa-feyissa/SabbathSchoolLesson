@@ -2,7 +2,6 @@ import { useState, ChangeEvent, FormEvent } from "react";
 import {
   Box,
   Button,
-  Container,
   FormControl,
   FormLabel,
   Heading,
@@ -56,7 +55,7 @@ const QuarterForm = () => {
   };
 
   return (
-    <Container maxWidth="lg" py={8}>
+    <Box w={{ base: "100%", lg: "60%" }}>
       <Box p={6} borderRadius="md" boxShadow="md">
         <Heading mb={4} textAlign={"center"}>
           Quarter
@@ -156,7 +155,7 @@ const QuarterForm = () => {
           </Stack>
         </form>
       </Box>
-    </Container>
+    </Box>
   );
 };
 
