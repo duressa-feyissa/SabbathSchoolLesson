@@ -1,5 +1,6 @@
 import { Flex, VStack, Box, useBreakpointValue } from "@chakra-ui/react";
 import RightAside from "./RightAside";
+import { Outlet } from "react-router-dom";
 
 const FormHandler = () => {
   const isSmallScreen = useBreakpointValue({
@@ -12,7 +13,9 @@ const FormHandler = () => {
   return (
     <Flex align="flex-start" h="100%" paddingY={"20px"}>
       <Box flex="1" position="relative" overflowY="auto">
-        <VStack spacing={"5"}></VStack>
+        <VStack spacing={"5"}>
+          <Outlet />
+        </VStack>
       </Box>
       <Box
         w={"320px"}
@@ -23,7 +26,6 @@ const FormHandler = () => {
         overflowY="auto"
         maxHeight="100vh"
       >
-        {/* Right Side Box Content */}
         <RightAside />
       </Box>
     </Flex>

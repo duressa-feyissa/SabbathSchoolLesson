@@ -39,7 +39,7 @@ const lessons = [
   { id: "13", title: "ከትዕቢት ወደ ጥፋት" },
 ];
 
-const QuarterDetail = () => {
+const Quarter = () => {
   const { colorMode } = useColorMode();
   const isDarkMode = colorMode === "dark";
   return (
@@ -47,7 +47,11 @@ const QuarterDetail = () => {
       <Box width={"90%"}>
         <VStack>
           <Text fontSize="14px" textAlign="justify">
-            <Heading fontSize="34px" textAlign="center" mb={3}>
+            <Heading
+              fontSize={{ base: "24px", lg: "34px" }}
+              textAlign="center"
+              mb={3}
+            >
               {quarter.title}
             </Heading>
             <Text
@@ -88,4 +92,4 @@ const QuarterDetail = () => {
   );
 };
 
-export default QuarterDetail;
+export default Quarter;

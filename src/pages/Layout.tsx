@@ -1,10 +1,9 @@
 import { Grid, Show, GridItem } from "@chakra-ui/react";
-import Aside from "./components/Aside";
-import NavBar from "./components/NavBar";
-import Lesson from "./components/Lesson";
-import Day from "./components/Day";
+import Aside from "../components/Aside";
+import { Outlet } from "react-router-dom";
+import NavBar from "../components/NavBar";
 
-function App() {
+const Layout = () => {
   return (
     <>
       <Grid
@@ -22,11 +21,11 @@ function App() {
         </Show>
         <GridItem gridArea="main">
           <NavBar />
-          <Day />
+          <Outlet />
         </GridItem>
       </Grid>
     </>
   );
-}
+};
 
-export default App;
+export default Layout;

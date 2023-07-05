@@ -39,7 +39,7 @@ const Lesson = () => {
   return (
     <VStack width={"100%"} paddingX={"12px"}>
       <Heading
-        fontSize={{ base: "24px", lg: "30px" }}
+        fontSize={{ base: "24px", lg: "34px" }}
         textAlign="center"
         mb={3}
       >
