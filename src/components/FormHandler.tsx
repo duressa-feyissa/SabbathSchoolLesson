@@ -6,7 +6,7 @@ const FormHandler = () => {
   const isSmallScreen = useBreakpointValue({
     base: true,
     sm: true,
-    md: false,
+    md: true,
     lg: false,
     xl: false,
   });

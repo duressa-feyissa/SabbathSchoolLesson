@@ -4,6 +4,8 @@ import QuarterGrid from "./QuarterGrid";
 import QuarterGridByYear from "./QuarterGridByYear";
 
 const QuarterCardContainer = () => {
+
+
   return (
     <Tabs
       variant="soft-rounded"

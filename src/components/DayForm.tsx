@@ -1,170 +1,288 @@
-import { useState, ChangeEvent, FormEvent } from "react";
 import {
   Box,
-  Button,
-  FormControl,
-  FormLabel,
   Heading,
   Input,
-  Select,
+  Button,
   Stack,
+  FormControl,
+  FormLabel,
+  Alert,
+  AlertIcon,
+  useToast,
+  Spinner,
+  Select,
   Textarea,
-  useBreakpointValue,
+  useColorMode,
 } from "@chakra-ui/react";
-import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+import { useForm, useFieldArray, FieldValues } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Day from "../entities/day";
+import { useLangQueryStore } from "../store";
+import APIClient from "../services/apiClinetAPI";
+import { useNavigate, useParams } from "react-router-dom";
+import useDay from "../hooks/useDay";
+import { useEffect } from "react";
+import useRead from "../hooks/useRead";
 
-const days = [
-  { id: "01", name: "Sunday" },
-  { id: "02", name: "Monday" },
-  { id: "03", name: "Tuesday" },
-  { id: "04", name: "Wednesday" },
-  { id: "05", name: "Thursday" },
-  { id: "06", name: "Friday" },
-  { id: "07", name: "Saturday" },
+const daysSelected = [
+  { value: "01", label: "Sunday" },
+  { value: "02", label: "Monday" },
+  { value: "03", label: "Tuesday" },
+  { value: "04", label: "Wednesday" },
+  { value: "05", label: "Thursday" },
+  { value: "06", label: "Friday" },
+  { value: "07", label: "Saturday" },
 ];
 
+const Schema = z.object({
+  title: z.string().nonempty("Title is required"),
+  id: z.string().nonempty("Day is required"),
+  day: z.string().nonempty("Day is required"),
+  date: z.string().nonempty("Date is required"),
+  paragraphs: z.array(
+    z.object({
+      text: z.string().nonempty("Paragraph is required"),
+    })
+  ),
+});
+
+type FormData = z.infer<typeof Schema>;
+
 const DayForm = () => {
-  const isSmallScreen = useBreakpointValue({
-    base: true,
-    sm: true,
-    md: false,
-    lg: false,
-    xl: false,
+  const navigate = useNavigate();
+  const { colorMode } = useColorMode();
+  const isDarkMode = colorMode === "dark";
+  const color = isDarkMode ? "green.100" : "green.900";
+
+  const language = useLangQueryStore((state) => state.language);
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(Schema),
+  });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "paragraphs",
   });
 
-  const [eventData, setEventData] = useState({
-    title: "",
-    day: "",
-    date: "",
-    index: "",
-    id: "",
-    paragraphs: [""],
-  });
+  const {
+    lang = "",
+    quarterId = "",
+    lessonId = "",
+    dayId = "",
+  } = useParams<{
+    lang: string;
+    quarterId: string;
+    lessonId: string;
+    dayId: string;
+  }>();
 
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    index?: number
-  ) => {
-    const { name, value } = e.target;
-    if (index) {
-      const updatedParagraphs = [...eventData.paragraphs];
-      updatedParagraphs[index] = value;
-      setEventData((prevData) => ({
-        ...prevData,
-        paragraphs: updatedParagraphs,
-      }));
-    } else {
-      setEventData((prevData) => ({
-        ...prevData,
-        [name]: value,
-      }));
+  const { data: day, isLoading } = useDay(quarterId, lessonId, dayId);
+  const { data: read } = useRead(language, quarterId, lessonId, dayId);
+  const toast = useToast();
+
+  useEffect(() => {
+    if (dayId && read?.paragraphs && day) {
+      setValue("title", day?.title);
+      setValue("day", day?.day);
+      setValue("id", day?.id);
+      setValue("date", day?.date);
+      read?.paragraphs?.forEach((paragraph: string, index: number) => {
+        setValue(`paragraphs.${index}.text`, paragraph);
+      });
+      console.log(read.paragraphs);
+    } else if (dayId && day) {
+      setValue("title", day.title);
+      setValue("day", day.day);
+      setValue("id", day.id);
+      setValue("date", day.date);
     }
+  }, [dayId, read, day, setValue]);
+
+  const onSubmit = async (data: FieldValues) => {
+    const apiClient = new APIClient<Day>(
+      `/v1/${lang}/quarters/${quarterId}/lessons/${lessonId}/days`
+    );
+    interface Paragraph {
+      text: string;
+    }
+    const sendData = {
+      title: data["title"],
+      day: data["day"],
+      date: data["date"],
+      id: dayId ? dayId : data["id"],
+      read: data["paragraphs"].map((paragraph: Paragraph) => paragraph.text),
+    };
+
+    let toastProps: {
+      title: string;
+      description: string;
+      status: "error" | "success";
+    };
+
+    let res;
+    if (dayId) {
+      res = await apiClient.put(dayId, sendData);
+    } else {
+      res = await apiClient.post(sendData);
+    }
+
+    if (res.status === 200 || res.status === 201)
+      navigate(`/${language}/quarters/${quarterId}/lessons/${lessonId}`);
+
+    // eslint-disable-next-line prefer-const
+    toastProps = {
+      title: res.status === 200 || res.status === 201 ? "Success" : "Failed",
+      description:
+        res.status === 200 || res.status === 201
+          ? dayId
+            ? "Day is successfully updated!"
+            : "Day is successfully created!"
+          : dayId
+          ? `${res.data}`
+          : `${res.data}`,
+      status: res.status === 200 || res.status === 201 ? "success" : "error",
+    };
+    toast({
+      title: toastProps.title,
+      position: "bottom-right",
+      colorScheme: "blue",
+      description: toastProps.description,
+      status: toastProps.status,
+      duration: 2000,
+    });
   };
 
-  const handleAddParagraph = () => {
-    setEventData((prevData) => ({
-      ...prevData,
-      paragraphs: [...prevData.paragraphs, ""],
-    }));
-  };
-
-  const handleRemoveParagraph = (index: number) => {
-    const updatedParagraphs = [...eventData.paragraphs];
-    updatedParagraphs.splice(index, 1);
-    setEventData((prevData) => ({
-      ...prevData,
-      paragraphs: updatedParagraphs,
-    }));
-  };
-
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log(eventData);
-  };
+  if (isLoading) return <Spinner />;
 
   return (
     <Box w={{ base: "100%", lg: "60%" }}>
       <Box p={6} borderRadius="md" boxShadow="md">
-        <Heading textAlign="center" mb={4}>
+        <Heading textAlign="center" mb={4} color={color}>
           Day
         </Heading>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={4}>
-            <FormControl isRequired>
+            <FormControl>
               <FormLabel>Title</FormLabel>
               <Input
+                {...register("title")}
+                id="title"
                 type="text"
                 name="title"
-                value={eventData.title}
-                onChange={handleChange}
+                size="md"
               />
+              {errors.title && (
+                <Alert>
+                  <AlertIcon />
+                  {errors.title.message}
+                </Alert>
+              )}
             </FormControl>
-            <FormControl isRequired>
-              <FormLabel>Day of the Week</FormLabel>
-              <Select variant="outline" name="dayOfTheWeek">
-                {days?.map((day) => (
-                  <option key={day.id} value={day.id}>
-                    {day.name}
+            <FormControl>
+              <FormLabel>Day</FormLabel>
+              <Select
+                {...register("id")}
+                id="id"
+                name="id"
+                size="md"
+                disabled={dayId ? true : false}
+                defaultValue={dayId ? dayId : daysSelected[0].value}
+              >
+                {daysSelected.map((day) => (
+                  <option key={day.value} value={day.value}>
+                    {day.label}
                   </option>
                 ))}
               </Select>
+              {errors.day && (
+                <Alert>
+                  <AlertIcon />
+                  {errors.day.message}
+                </Alert>
+              )}
             </FormControl>
-            <FormControl isRequired>
-              <FormLabel>Day</FormLabel>
+            <FormControl>
+              <FormLabel>Day of the Week</FormLabel>
               <Input
+                {...register("day")}
+                id="day"
                 type="text"
                 name="day"
-                value={eventData.title}
-                onChange={handleChange}
+                size="md"
               />
+              {errors.day && (
+                <Alert>
+                  <AlertIcon />
+                  {errors.day.message}
+                </Alert>
+              )}
             </FormControl>
-            <FormControl isRequired>
+            <FormControl>
               <FormLabel>Date</FormLabel>
-              <Input type="date" name="date" value={eventData.date} />
+              <Input
+                {...register("date")}
+                id="date"
+                type="date"
+                name="date"
+                size="md"
+              />
+              {errors.date && (
+                <Alert>
+                  <AlertIcon />
+                  {errors.date.message}
+                </Alert>
+              )}
             </FormControl>
-            <FormControl isRequired>
+            <FormControl>
               <FormLabel>Paragraphs</FormLabel>
-              {eventData.paragraphs.map((paragraph, index) => (
+              {fields.map((field, index) => (
                 <Stack
-                  key={index}
+                  key={field.id}
                   direction="row"
                   spacing={3}
                   alignItems="center"
                 >
                   <Textarea
-                    name="paragraphs"
-                    marginY={3}
-                    resize={"none"}
-                    value={paragraph}
-                    onChange={(e) => handleChange(e, index)}
+                    {...register(`paragraphs.${index}.text`, {
+                      required: true,
+                    })}
+                    name={`paragraphs.${index}.text`}
+                    height="100px"
+                    marginY="7px"
                   />
-                  {index === eventData.paragraphs.length - 1 && (
-                    <Button
-                      onClick={handleAddParagraph}
-                      size="sm"
-                      colorScheme="blue"
-                      paddingX={4}
-                      leftIcon={<AddIcon />}
-                    >
-                      {!isSmallScreen ? "Add" : null}
-                    </Button>
-                  )}
-                  {index !== eventData.paragraphs.length - 1 && (
-                    <Button
-                      onClick={() => handleRemoveParagraph(index)}
-                      size="sm"
-                      colorScheme="red"
-                      paddingX={4}
-                      leftIcon={<DeleteIcon />}
-                    >
-                      {!isSmallScreen ? "Remove" : null}
-                    </Button>
-                  )}
+                  {Array.isArray(errors.paragraphs) &&
+                    errors.paragraphs.length > index &&
+                    errors.paragraphs[index]?.text && (
+                      <Alert status="error">
+                        <AlertIcon />
+                        {errors.paragraphs[index]?.text.message}
+                      </Alert>
+                    )}
+                  <Button
+                    size="sm"
+                    colorScheme="red"
+                    onClick={() => remove(index)}
+                  >
+                    Remove
+                  </Button>
                 </Stack>
               ))}
+              <Button
+                size="sm"
+                colorScheme="blue"
+                onClick={() => append({ text: "" })}
+              >
+                Add
+              </Button>
             </FormControl>
             <Button colorScheme="blue" type="submit">
-              Submit
+              {dayId ? "Update" : "Create"}
             </Button>
           </Stack>
         </form>

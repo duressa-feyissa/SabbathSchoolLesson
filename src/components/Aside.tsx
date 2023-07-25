@@ -1,24 +1,21 @@
+import { Link } from "react-router-dom";
 import logo from "../images/logo.jpg";
+
 import {
   Box,
   Text,
-  Heading,
   HStack,
   Image,
   VStack,
-  Button,
-  Divider,
   useColorMode,
+  Divider,
 } from "@chakra-ui/react";
-
-const manage = ["Languages", "Quarters", "Lessons", "Days"];
+import MenuBar from "./MenuBar";
 
 const Aside = () => {
   const { colorMode } = useColorMode();
   const isDarkMode = colorMode === "dark";
-
   const bgColor = isDarkMode ? "#202123" : "";
-
   return (
     <Box
       padding={"10px"}
@@ -26,56 +23,31 @@ const Aside = () => {
       height={"100vh"}
       style={{ position: "fixed", top: 0, left: 0 }}
     >
-      <HStack width={"200px"}>
-        <Image
-          src={logo}
-          alt="logo"
-          objectFit="cover"
-          width="70px"
-          height="60px"
-          borderRadius={3}
-        />
-        <Text
-          align="center"
-          fontWeight="bold"
-          fontSize="22px"
-          width="90px"
-          fontFamily="sans-serif"
-          color="#fbad5c"
-        >
-          Sabbath School
-        </Text>
-      </HStack>
-      <Box mt={"30px"}>
-        <Box margin={"10px"}>
-          <Heading fontSize="2xl" mt="20px" textAlign="center">
-            Manage
-          </Heading>
-          <Divider mb={"20px"} mt={"10px"} />
-          <VStack spacing="16px" align="stretch">
-            {manage.map((task) => (
-              <Button
-                key={task}
-                variant="ghost"
-                justifyContent="flex-start"
-                borderRadius={8}
-              >
-                <HStack paddingY="5px">
-                  <Image
-                    src={logo}
-                    boxSize="32px"
-                    objectFit="cover"
-                    borderRadius={8}
-                  />
-                  <Text whiteSpace="normal" ml="7px" fontSize="lg">
-                    {task}
-                  </Text>
-                </HStack>
-              </Button>
-            ))}
-          </VStack>
-        </Box>
-      </Box>
+      <Link to="/">
+        <HStack width={"200px"}>
+          <Image
+            src={logo}
+            alt="logo"
+            objectFit="cover"
+            width="70px"
+            height="60px"
+            borderRadius={3}
+          />
+          <Text
+            align="center"
+            fontWeight="bold"
+            fontSize="22px"
+            width="90px"
+            fontFamily="sans-serif"
+            color="#fbad5c"
+          >
+            Sabbath School
+          </Text>
+        </HStack>
+      </Link>
+      <Box minH={"60px"}></Box>
+      <Divider />
+      <MenuBar />
       <Box mt="10px">
         <VStack spacing="16px" align="stretch"></VStack>
       </Box>

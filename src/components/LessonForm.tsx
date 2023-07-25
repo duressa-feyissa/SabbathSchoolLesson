@@ -1,4 +1,6 @@
-import { useState, ChangeEvent, FormEvent } from "react";
+import { FieldValues, useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
   Button,
@@ -8,121 +10,237 @@ import {
   Input,
   Select,
   Stack,
+  Alert,
+  AlertIcon,
+  Spinner,
+  useToast,
+  useColorMode,
 } from "@chakra-ui/react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect } from "react";
+import APIClient from "../services/apiClinetAPI";
+import { useLangQueryStore } from "../store";
+import useLesson from "../hooks/useLesson";
+import Lesson from "../entities/Lesson";
 
-const lessons = [
-  { id: "01", name: "Lesson 1" },
-  { id: "02", name: "Lesson 2" },
-  { id: "03", name: "Lesson 3" },
-  { id: "04", name: "Lesson 4" },
-  { id: "05", name: "Lesson 5" },
-  { id: "06", name: "Lesson 6" },
-  { id: "07", name: "Lesson 7" },
-  { id: "08", name: "Lesson 8" },
-  { id: "09", name: "Lesson 9" },
-  { id: "10", name: "Lesson 10" },
-  { id: "11", name: "Lesson 11" },
-  { id: "12", name: "Lesson 12" },
-  { id: "13", name: "Lesson 13" },
-  { id: "14", name: "Lesson 14" },
+const schema = z.object({
+  title: z.string().nonempty("Title is required"),
+  memorial_script: z.string().nonempty("Description is required"),
+  start_date: z.string().nonempty("Start Date is required"),
+  end_date: z.string().nonempty("End Date is required"),
+  id: z.string().nonempty("Quarter is required"),
+});
+
+type FormData = z.infer<typeof schema>;
+
+const SelectedLessons = [
+  { value: "01", label: "Lesson 1" },
+  { value: "02", label: "Lesson 2" },
+  { value: "03", label: "Lesson 3" },
+  { value: "04", label: "Lesson 4" },
+  { value: "05", label: "Lesson 5" },
+  { value: "06", label: "Lesson 6" },
+  { value: "07", label: "Lesson 7" },
+  { value: "08", label: "Lesson 8" },
+  { value: "09", label: "Lesson 9" },
+  { value: "10", label: "Lesson 10" },
+  { value: "11", label: "Lesson 11" },
+  { value: "12", label: "Lesson 12" },
+  { value: "13", label: "Lesson 13" },
+  { value: "14", label: "Lesson 14" },
 ];
 
 const LessonForm = () => {
-  const [eventData, setEventData] = useState({
-    title: "",
-    memorial_script: "",
-    start_date: "",
-    end_date: "",
-    index: "",
-    id: "",
-    cover: "",
+  const navigate = useNavigate();
+  const language = useLangQueryStore((state) => state.language);
+
+  const { colorMode } = useColorMode();
+  const isDarkMode = colorMode === "dark";
+  const color = isDarkMode ? "green.100" : "green.900";
+
+  const {
+    lang = "",
+    quarterId = "",
+    lessonId = "",
+  } = useParams<{
+    lang: string;
+    quarterId: string;
+    lessonId: string;
+  }>();
+  const toast = useToast();
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
   });
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEventData((prevData) => ({ ...prevData, [name]: value }));
-  };
+  const { data: lesson, isLoading } = useLesson(lang, quarterId, lessonId);
 
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      console.log("File uploaded:", file);
+  useEffect(() => {
+    if (quarterId && lang && lesson) {
+      setValue("title", lesson.title);
+      setValue("start_date", lesson.start_date);
+      setValue("end_date", lesson.end_date);
+      setValue("id", lesson.id);
+      setValue("memorial_script", lesson.memorial_script);
     }
+  }, [lang, quarterId, lesson, setValue, lessonId]);
+
+  const onSubmit = async (data: FieldValues) => {
+    const apiClient = new APIClient<Lesson>(
+      `/v1/${lang}/quarters/${quarterId}/lessons`
+    );
+    const sendData = {
+      title: data["title"],
+      start_date: data["start_date"],
+      end_date: data["end_date"],
+      id: lessonId ? lessonId : data["id"],
+      memorial_script: data["memorial_script"],
+    };
+
+    let toastProps: {
+      title: string;
+      description: string;
+      status: "error" | "success";
+    };
+    console.log("lessonId", lessonId);
+    let res;
+    if (lessonId) {
+      res = await apiClient.put(lessonId, sendData);
+    } else {
+      res = await apiClient.post(sendData);
+    }
+
+    if (res.status === 200 || res.status === 201)
+      navigate(`/${language}/quarters/${quarterId}`);
+
+    // eslint-disable-next-line prefer-const
+    toastProps = {
+      title: res.status === 200 || res.status === 201 ? "Success" : "Failed",
+      description:
+        res.status === 200 || res.status === 201
+          ? lang
+            ? "Lesson is successfully updated!"
+            : "Lesson is successfully created!"
+          : lang
+          ? `${res.data}`
+          : `${res.data}`,
+      status: res.status === 200 || res.status === 201 ? "success" : "error",
+    };
+    toast({
+      title: toastProps.title,
+      position: "bottom-right",
+      colorScheme: "blue",
+      description: toastProps.description,
+      status: toastProps.status,
+      duration: 2000,
+    });
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // Handle form submission logic here
-    console.log(eventData);
-  };
+  if (isLoading) return <Spinner />;
 
   return (
     <Box w={{ base: "100%", lg: "60%" }}>
-      <Box p={6}>
-        <Heading mb={4} textAlign={"center"} >
+      <Box p={6} borderRadius="md" boxShadow="md">
+        <Heading mb={4} textAlign="center" color={color}>
           Lesson
         </Heading>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={4}>
-            <FormControl isRequired>
+            <FormControl>
               <FormLabel>Title</FormLabel>
               <Input
+                {...register("title")}
+                id="title"
                 type="text"
                 name="title"
-                value={eventData.title}
-                onChange={handleChange}
+                size="md"
               />
+              {errors.title && (
+                <Alert>
+                  <AlertIcon />
+                  {errors.title.message}
+                </Alert>
+              )}
             </FormControl>
-            <FormControl isRequired>
+            <FormControl>
               <FormLabel>Lesson</FormLabel>
-              <Select variant="outline">
-                {lessons?.map((lesson) => (
-                  <option key={lesson.id} value={lesson.id}>
-                    {lesson.name}
+              <Select
+                {...register("id")}
+                id="id"
+                name="id"
+                size="md"
+                disabled={lessonId ? true : false}
+                defaultValue={
+                  lesson && lessonId ? lesson.id : SelectedLessons[0].value
+                }
+              >
+                {SelectedLessons.map((lesson) => (
+                  <option key={lesson.value} value={lesson.value}>
+                    {lesson.label}
                   </option>
                 ))}
               </Select>
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel>Memorial Script</FormLabel>
-              <Input
-                type="text"
-                name="human_date"
-                value={eventData.memorial_script}
-                onChange={handleChange}
-              />
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel>Start Date</FormLabel>
-              <Input
-                type="date"
-                name="start_date"
-                value={eventData.start_date}
-                onChange={handleChange}
-              />
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel>End Date</FormLabel>
-              <Input
-                type="date"
-                name="end_date"
-                value={eventData.end_date}
-                onChange={handleChange}
-              />
+              {errors.id && (
+                <Alert>
+                  <AlertIcon />
+                  {errors.id.message}
+                </Alert>
+              )}
             </FormControl>
             <FormControl>
-              <FormLabel>Image</FormLabel>
+              <FormLabel>Memorial Script</FormLabel>
               <Input
-                type="file"
-                name="image"
-                accept="image/jpeg, image/png, image/jpg"
-                onChange={handleImageUpload}
-                padding={1}
+                {...register("memorial_script")}
+                id="memorial_script"
+                type="text"
+                name="memorial_script"
+                size="md"
               />
+              {errors.memorial_script && (
+                <Alert>
+                  <AlertIcon />
+                  {errors.memorial_script.message}
+                </Alert>
+              )}
             </FormControl>
-
+            <FormControl>
+              <FormLabel>Start Date</FormLabel>
+              <Input
+                {...register("start_date")}
+                type="date"
+                id="start_date"
+                name="start_date"
+                size="md"
+              />
+              {errors.start_date && (
+                <Alert>
+                  <AlertIcon />
+                  {errors.start_date.message}
+                </Alert>
+              )}
+            </FormControl>
+            <FormControl>
+              <FormLabel>End Date</FormLabel>
+              <Input
+                {...register("end_date")}
+                type="date"
+                id="end_date"
+                name="end_date"
+                size="md"
+              />
+              {errors.end_date && (
+                <Alert>
+                  <AlertIcon />
+                  {errors.end_date.message}
+                </Alert>
+              )}
+            </FormControl>
             <Button colorScheme="blue" type="submit">
-              Add
+              {lessonId ? "Update" : "Create"}
             </Button>
           </Stack>
         </form>

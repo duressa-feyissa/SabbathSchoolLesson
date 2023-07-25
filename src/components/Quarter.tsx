@@ -10,81 +10,90 @@ import {
   Badge,
   Image,
   SimpleGrid,
+  Spinner,
 } from "@chakra-ui/react";
-import cover from "../images/cover.png";
-
-const quarter = {
-  title: "የእግዚአብሔርን ተልዕኮ በማካፈል የሚገኝ ደስታ",
-  description:
-    "አንድ ሀሳብን መረዳታችን በሕይወታችን ውስጥ ትልቅ ለውጥ የሚያመጣባቸው ጊዜያት አሉ። ከተወሰኑ ዓመታት በፊት ከአንዳንድ የሥራ ባልደረቦቼ ጋር በሚኒስትሮች ስብሰባ ላይ ተቀመጥኩ ፡፡ ውይይታችን እምነታችንን ፣ መስክራችንን እና ወንጌላዊነታችንን ማካፈልን ተቀየረ ፡፡ ከጓደኞቼ አንዱ ይህንን ሀሳብ ሲገልጽ “ተልዕኮ በዋነኝነት የእግዚአብሔር ስራ ነው። ፕላኔታችንን ለማዳን ሁሉንም የሰማይ ሀብቶችን እየተጠቀመ ነው። የጠፋን ሰዎችን ለማዳን ሥራችን የእኛ ሥራ ከእርሱ ጋር በደስታ አብረን መሥራት ነው። ” ከባድ ሸክም ከትከሻዬ ላይ የወረደ መሰለኝ ፡፡ የጠፋ ዓለምን ማዳን የእኔ ሥራ አይደለም ፡፡ የእግዚአብሔር ነበር ፡፡ ኃላፊነቴ ቀድሞውኑ እየሠራው በነበረው ሥራ ከእሱ ጋር መተባበር ነበር ፡፡",
-  human_date: "3ኛ ሩብ ዓመት 2020",
-  start_date: "27/06/2020",
-  end_date: "25/09/2020",
-  color_primary: "#A28670",
-  color_primary_dark: "#6F4B2D",
-};
-
-const lessons = [
-  { id: "01", title: "የእግዚአብሔርን ተልዕኮ በማካፈል የሚገኝ ደስታ" },
-  { id: "02", title: "ከማንበብ ወደ መረዳት" },
-  { id: "03", title: "ከእየሩሳሌም ወደ ባቢሎን" },
-  { id: "04", title: "ከምድጃ ወደ ቤተ-መንግስት" },
-  { id: "05", title: "ከኩራት ወደ ትህትና" },
-  { id: "06", title: "ከትዕቢት ወደ ጥፋት" },
-  { id: "07", title: "የእግዚአብሔርን ተልዕኮ በማካፈል የሚገኝ ደስታ" },
-  { id: "08", title: "ከማንበብ ወደ መረዳት" },
-  { id: "09", title: "ከእየሩሳሌም ወደ ባቢሎን" },
-  { id: "10", title: "ከምድጃ ወደ ቤተ-መንግስት" },
-  { id: "11", title: "ከኩራት ወደ ትህትና" },
-  { id: "13", title: "ከትዕቢት ወደ ጥፋት" },
-];
+import { Link, useParams } from "react-router-dom";
+import useLessons from "../hooks/useLessons";
+import useQuarter from "../hooks/useQuarter";
+import { useLangQueryStore } from "../store";
+import { EditIcon } from "@chakra-ui/icons";
+import DeleteLesson from "./DeleteLesson";
+import useAuth from "../hooks/useAuth";
 
 const Quarter = () => {
+  const { quarterId } = useParams<{ quarterId: string }>();
+  const validQuarterId = quarterId || "";
+  const language = useLangQueryStore((state) => state.language);
+  const { data: quarter } = useQuarter(language, validQuarterId);
+  const { data: lessons, isLoading, refetch } = useLessons();
   const { colorMode } = useColorMode();
   const isDarkMode = colorMode === "dark";
+  const currUser = useAuth();
+  const color = isDarkMode ? "green.100" : "green.900";
+
+  const handleFetch = () => refetch();
+
+  if (isLoading) <Spinner />;
   return (
     <Box display={"flex"} justifyContent={"center"} width={"100%"}>
       <Box width={"90%"}>
-        <VStack>
+        <VStack mt="4">
           <Text fontSize="14px" textAlign="justify">
             <Heading
-              fontSize={{ base: "24px", lg: "34px" }}
-              textAlign="center"
-              mb={3}
+              size={"xl"}
+              margin={"auto"}
+              textAlign={"center"}
+              color={color}
             >
-              {quarter.title}
+              {quarter?.title}
             </Heading>
+            <Text marginY={"10px"}>{quarter?.human_date}</Text>
             <Text
               fontSize="18px"
               lineHeight="1.5"
-              color={isDarkMode ? "gray.100" : ""}
+              color={color}
+              fontWeight={"medium"}
             >
-              {quarter.description}
+              {quarter?.description}
             </Text>
           </Text>
           <HStack justify="space-between" mt={3}></HStack>
         </VStack>
         <Box mt={5} display={"flex"} justifyContent={"space-between"}>
           <SimpleGrid columns={{ md: 2 }} spacing={3}>
-            {lessons.map((lesson) => (
-              <VStack key={lesson.id} align={"flex-start"}>
-                <Button variant="ghost">
-                  <HStack>
-                    <Badge
-                      colorScheme="green"
-                      fontSize="23px"
-                      borderRadius="4px"
+            {lessons?.map((lesson) => (
+              <HStack key={lesson.id} spacing={4} justify={"flex-start"}>
+                <Link to={`lessons/${lesson.id}`}>
+                  <VStack align={"flex-start"}>
+                    <Button variant="ghost">
+                      <HStack>
+                        <Badge
+                          colorScheme="green"
+                          fontSize="23px"
+                          borderRadius="4px"
+                        >
+                          {lesson.id}
+                        </Badge>
+                        <Text color={color}>{lesson.title}</Text>
+                      </HStack>
+                    </Button>
+                  </VStack>
+                </Link>
+                {currUser?.role === "admin" && (
+                  <>
+                    <Link
+                      to={`/admin/languages/${language}/quarters/${quarterId}/lessons/${lesson.id}/edit`}
                     >
-                      {lesson.id}
-                    </Badge>
-                    <Text>{lesson.title}</Text>
-                  </HStack>
-                </Button>
-              </VStack>
+                      <EditIcon color="blue.500" cursor="pointer" />
+                    </Link>
+                    <DeleteLesson lessonId={lesson.id} refetch={handleFetch} />
+                  </>
+                )}
+              </HStack>
             ))}
           </SimpleGrid>
           <Card width={"250px"} display={{ xl: "block", base: "none" }}>
-            <Image src={cover} alt="cover" />
+            <Image src={quarter?.cover} alt="cover" />
           </Card>
         </Box>
       </Box>

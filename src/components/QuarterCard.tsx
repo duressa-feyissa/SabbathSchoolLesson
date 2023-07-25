@@ -4,43 +4,49 @@ import {
   Heading,
   Image,
   Text,
-  Badge,
   HStack,
   useColorMode,
 } from "@chakra-ui/react";
-import cover from "../images/cover.png";
+import { Link, useParams } from "react-router-dom";
+import { EditIcon, AddIcon } from "@chakra-ui/icons";
+import useAuth from "../hooks/useAuth";
+import Quarter from "../entities/Quarter";
+import { useLangQueryStore } from "../store";
+import QuarterNumber from "./QuarterNumber";
+import Icon from "./Icon";
+import DeleteQuarter from "./DeleteQuarter";
 
-const quarter = {
-  title: "የእግዚአብሔርን ተልዕኮ በማካፈል የሚገኝ ደስታ",
-  description:
-    "አንድ ሀሳብን መረዳታችን በሕይወታችን ውስጥ ትልቅ ለውጥ የሚያመጣባቸው ጊዜያት አሉ። ከተወሰኑ ዓመታት በፊት ከአንዳንድ የሥራ ባልደረቦቼ ጋር በሚኒስትሮች ስብሰባ ላይ ተቀመጥኩ ፡፡ ውይይታችን እምነታችንን ፣ መስክራችንን እና ወንጌላዊነታችንን ማካፈልን ተቀየረ ፡፡ ከጓደኞቼ አንዱ ይህንን ሀሳብ ሲገልጽ “ተልዕኮ በዋነኝነት የእግዚአብሔር ስራ ነው። ፕላኔታችንን ለማዳን ሁሉንም የሰማይ ሀብቶችን እየተጠቀመ ነው። የጠፋን ሰዎችን ለማዳን ሥራችን የእኛ ሥራ ከእርሱ ጋር በደስታ አብረን መሥራት ነው። ” ከባድ ሸክም ከትከሻዬ ላይ የወረደ መሰለኝ ፡፡ የጠፋ ዓለምን ማዳን የእኔ ሥራ አይደለም ፡፡ የእግዚአብሔር ነበር ፡፡ ኃላፊነቴ ቀድሞውኑ እየሠራው በነበረው ሥራ ከእሱ ጋር መተባበር ነበር ፡፡",
-  human_date: "3ኛ ሩብ ዓመት 2020",
-  start_date: "27/06/2020",
-  end_date: "25/09/2020",
-  color_primary: "#A28670",
-  color_primary_dark: "#6F4B2D",
-};
+interface Props {
+  quarter: Quarter;
+  refetch?: () => void;
+}
 
-const QuarterCard = () => {
+const QuarterCard = ({ quarter, refetch }: Props) => {
   const { colorMode } = useColorMode();
+  const { lang } = useParams<{ lang: string }>();
   const isDarkMode = colorMode === "dark";
-  const score = "04";
+  const color = isDarkMode ? "green.100" : "green.900";
+  const language = useLangQueryStore((state) => state.language);
+  const currUser = useAuth();
+
   return (
     <Card>
       <Box p={3}>
         <Text fontSize="14px" textAlign="justify">
           <Image
-            src={cover}
+            src={quarter.cover}
             w="130px"
             h="175px"
             float="left"
             borderRadius="lg"
             pr={3}
           />
-          <Heading fontSize="22px" textAlign="center" mb={3}>
-            {quarter.title}
-          </Heading>
-          <Text lineHeight="1.5" color={isDarkMode ? "gray.100" : ""}>
+          <Link to={`/${language}/quarters/${quarter.id}`}>
+            <Heading fontSize="22px" textAlign="center" mb={3} color={color}>
+              {quarter.title}
+            </Heading>
+          </Link>
+          <Text lineHeight="1.5" color={color}>
             {quarter.description}
           </Text>
         </Text>
@@ -52,9 +58,30 @@ const QuarterCard = () => {
           >
             {quarter.human_date}
           </Text>
-          <Badge colorScheme="green" fontSize="23px" borderRadius="4px">
-            {score}
-          </Badge>
+
+          {currUser && currUser.role === "admin" && (
+            <HStack spacing={3}>
+              <QuarterNumber quarter={quarter.id.slice(5)} />
+              {lang && (
+                <>
+                  <Link
+                    to={`/admin/languages/${lang}/quarters/${quarter.id}/lessons/add`}
+                  >
+                    <Icon colorScheme="teal" icon={AddIcon} />
+                  </Link>
+                  <Link
+                    to={`/admin/languages/${lang}/quarters/${quarter.id}/edit`}
+                  >
+                    <Icon colorScheme="blue" icon={EditIcon} />
+                  </Link>
+                  <DeleteQuarter quarterId={quarter.id} refetch={refetch} />
+                </>
+              )}
+            </HStack>
+          )}
+          {currUser?.role !== "admin" && (
+            <QuarterNumber quarter={quarter.id.slice(5)} />
+          )}
         </HStack>
       </Box>
     </Card>

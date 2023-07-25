@@ -1,3 +1,4 @@
+import { useParams, Link } from "react-router-dom";
 import {
   Heading,
   HStack,
@@ -7,61 +8,97 @@ import {
   Button,
   Badge,
   SimpleGrid,
+  Spinner,
+  useColorMode,
 } from "@chakra-ui/react";
-
-const quarter = {
-  title: "የእግዚአብሔርን ተልዕኮ በማካፈል የሚገኝ ደስታ",
-  description:
-    "አንድ ሀሳብን መረዳታችን በሕይወታችን ውስጥ ትልቅ ለውጥ የሚያመጣባቸው ጊዜያት አሉ። ከተወሰኑ ዓመታት በፊት ከአንዳንድ የሥራ ባልደረቦቼ ጋር በሚኒስትሮች ስብሰባ ላይ ተቀመጥኩ ፡፡ ውይይታችን እምነታችንን ፣ መስክራችንን እና ወንጌላዊነታችንን ማካፈልን ተቀየረ ፡፡ ከጓደኞቼ አንዱ ይህንን ሀሳብ ሲገልጽ “ተልዕኮ በዋነኝነት የእግዚአብሔር ስራ ነው። ፕላኔታችንን ለማዳን ሁሉንም የሰማይ ሀብቶችን እየተጠቀመ ነው። የጠፋን ሰዎችን ለማዳን ሥራችን የእኛ ሥራ ከእርሱ ጋር በደስታ አብረን መሥራት ነው። ” ከባድ ሸክም ከትከሻዬ ላይ የወረደ መሰለኝ ፡፡ የጠፋ ዓለምን ማዳን የእኔ ሥራ አይደለም ፡፡ የእግዚአብሔር ነበር ፡፡ ኃላፊነቴ ቀድሞውኑ እየሠራው በነበረው ሥራ ከእሱ ጋር መተባበር ነበር ፡፡",
-  human_date: "3ኛ ሩብ ዓመት 2020",
-  start_date: "27/06/2020",
-  end_date: "25/09/2020",
-  color_primary: "#A28670",
-  color_primary_dark: "#6F4B2D",
-};
-
-const lessons = [
-  { id: "01", title: "የእግዚአብሔርን ተልዕኮ በማካፈል የሚገኝ ደስታ" },
-  { id: "02", title: "ከማንበብ ወደ መረዳት" },
-  { id: "03", title: "ከእየሩሳሌም ወደ ባቢሎን" },
-  { id: "04", title: "ከምድጃ ወደ ቤተ-መንግስት" },
-  { id: "05", title: "ከኩራት ወደ ትህትና" },
-  { id: "06", title: "ከትዕቢት ወደ ጥፋት" },
-  { id: "07", title: "የእግዚአብሔርን ተልዕኮ በማካፈል የሚገኝ ደስታ" },
-  { id: "08", title: "ከማንበብ ወደ መረዳት" },
-  { id: "09", title: "ከእየሩሳሌም ወደ ባቢሎን" },
-  { id: "10", title: "ከምድጃ ወደ ቤተ-መንግስት" },
-  { id: "11", title: "ከኩራት ወደ ትህትና" },
-  { id: "13", title: "ከትዕቢት ወደ ጥፋት" },
-];
+import { useLangQueryStore } from "../store";
+import useAuth from "../hooks/useAuth";
+import Icon from "./Icon";
+import { AddIcon, EditIcon } from "@chakra-ui/icons";
+import useDays from "../hooks/useDays";
+import useLesson from "../hooks/useLesson";
+import DeleteDay from "./DeleteDayButton";
 
 const Lesson = () => {
-  return (
-    <VStack width={"100%"} paddingX={"12px"}>
-      <Heading
-        fontSize={{ base: "24px", lg: "34px" }}
-        textAlign="center"
-        mb={3}
-      >
-        {quarter.title}
+  const currUser = useAuth();
+  const { quarterId = "", lessonId = "" } = useParams<{
+    quarterId: string;
+    lessonId: string;
+  }>();
+
+  const { colorMode } = useColorMode();
+  const isDarkMode = colorMode === "dark";
+  const color = isDarkMode ? "green.100" : "green.900";
+  const validQuarterId = quarterId || "";
+  const language = useLangQueryStore((state) => state.language);
+  const { data: lesson } = useLesson(language, validQuarterId, lessonId);
+  const { data: days, isLoading, refetch } = useDays(validQuarterId, lessonId);
+
+  days?.sort((a, b) => {
+    return parseInt(a.id) - parseInt(b.id);
+  });
+
+  const handleFetch = () => refetch();
+
+  if (isLoading) return <Spinner alignSelf={"center"} />;
+
+  return !days ? (
+    <Heading size={"lg"} margin={"auto"} textAlign={"center"}>
+      Coming Soon...
+    </Heading>
+  ) : (
+    <VStack mt="4" width={"100%"} paddingX={"12px"}>
+      <Heading size={"xl"} margin={"auto"} textAlign={"center"} color={color}>
+        {lesson?.title}
       </Heading>
-      <Text mb={"2"} textAlign={"center"}>
-        ‹‹ፊልጶስም ሮጦ የነቢዩን የኢሳይያስን መጽሐፍ ሲያነብ ሰማና። በውኑ የምታነበውን ታስተውለዋለህን? አለው። ››
-        (ሐዋ 8:30)
+      <Text
+        mb={"2"}
+        textAlign={"center"}
+        color={color}
+        width={{ base: "95%", lg: "70%" }}
+      >
+        {lesson?.memorial_script}
       </Text>
+      <Box justifySelf={"flex-start"} w={{ base: "90%", lg: "50%", xl: "50%" }}>
+        <Link
+          to={`/admin/languages/${language}/quarters/${quarterId}/lessons/${lessonId}/days/add`}
+        >
+          {currUser?.role === "admin" && (
+            <Icon colorScheme="teal" icon={AddIcon} />
+          )}{" "}
+        </Link>
+      </Box>
       <Box>
-        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={5}>
-          {lessons.map((lesson) => (
-            <VStack key={lesson.id} align={"flex-start"}>
-              <Button variant="ghost">
-                <HStack>
-                  <Badge colorScheme="green" fontSize="23px" borderRadius="4px">
-                    {lesson.id}
-                  </Badge>
-                  <Text>{lesson.title}</Text>
-                </HStack>
-              </Button>
-            </VStack>
+        <SimpleGrid columns={{ base: 1 }} spacing={5}>
+          {days?.map((day, index) => (
+            <HStack key={day.id} spacing={4} justify={"flex-start"}>
+              <Link to={`days/0${index + 1}`} key={index}>
+                <VStack key={day.id} align={"flex-start"}>
+                  <Button variant="ghost">
+                    <HStack>
+                      <Badge
+                        colorScheme="green"
+                        fontSize="23px"
+                        borderRadius="4px"
+                      >
+                        {day.day}
+                      </Badge>
+                      <Text color={color}>{day.title}</Text>
+                    </HStack>
+                  </Button>
+                </VStack>
+              </Link>
+              {currUser?.role === "admin" && (
+                <>
+                  <Link
+                    to={`/admin/languages/${language}/quarters/${quarterId}/lessons/${lessonId}/days/${day.id}/edit`}
+                  >
+                    <EditIcon color="blue.500" cursor="pointer" />
+                  </Link>
+                  <DeleteDay refetch={handleFetch} dayId={day.id} />
+                </>
+              )}
+            </HStack>
           ))}
         </SimpleGrid>
       </Box>
