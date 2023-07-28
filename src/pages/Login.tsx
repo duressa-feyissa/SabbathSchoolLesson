@@ -37,7 +37,7 @@ const Login = () => {
           </Box>
           <Link to="/">
             <Button
-            color={"#ffb400"}
+              color={"#ffb400"}
               className={"secondary-button"}
               leftIcon={<AiOutlineArrowRight />}
             >

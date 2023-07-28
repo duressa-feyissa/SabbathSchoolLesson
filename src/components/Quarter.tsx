@@ -33,7 +33,7 @@ const Quarter = () => {
 
   const handleFetch = () => refetch();
 
-  if (isLoading) <Spinner />;
+  if (isLoading) <Spinner alignSelf={"center"} />;
   return (
     <Box display={"flex"} justifyContent={"center"} width={"100%"}>
       <Box width={"90%"}>
