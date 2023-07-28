@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 import route from "./routes";
 import LanguageProvider from "./providers/LangProvider.tsx";
+import "./app.css";
 
 const queryClient = new QueryClient();
 

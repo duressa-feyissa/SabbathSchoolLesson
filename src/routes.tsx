@@ -12,7 +12,7 @@ import LessonForm from "./components/LessonForm";
 import DayForm from "./components/DayForm";
 import ErrorPage from "./pages/ErrorPage";
 import Quarter from "./components/Quarter";
-import Login from "./components/Login";
+import Login from "./pages/Login";
 import PrivateRoutes from "./components/PrivateRoutes";
 import QuarterInfo from "./components/QuarterInfo";
 
