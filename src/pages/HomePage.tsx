@@ -1,11 +1,11 @@
 import Banner from "../components/Banner";
-import QuarterCardContainer from "../components/QuarterCardContainer";
+import QuarterGrid from "../components/QuarterGrid";
 
 const HomePage = () => {
   return (
     <>
       <Banner />
-      <QuarterCardContainer />
+      <QuarterGrid />
     </>
   );
 };

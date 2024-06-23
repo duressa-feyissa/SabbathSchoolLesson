@@ -1,26 +1,23 @@
 import {
+  Box,
+  Center,
   Flex,
-  Text,
-  Avatar,
   HStack,
   Image,
+  Text,
   useBreakpointValue,
-  useDisclosure,
-  useColorMode,
-  Box,
+  useColorModeValue,
 } from "@chakra-ui/react";
-import SearchInput from "./SearchInput";
-import Setting from "./Setting";
-import logo from "../images/logo.jpg";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import useAuth from "../hooks/useAuth";
+import Select from "react-select";
+import useChangeLanguage from "../hooks/useChangeLanguage";
+import logo from "../images/logo.jpg";
 import ColorModeSwitch from "./ColorModeSwitch";
-import defaultUserImage from "../images/user.png";
-import { AiOutlineMenu } from "react-icons/ai";
 
 const NavBar = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const currUser = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const setLanguage = useChangeLanguage();
 
   const isSmallScreen = useBreakpointValue({
     base: true,
@@ -30,75 +27,195 @@ const NavBar = () => {
     xl: false,
   });
 
-  const logoDisplay = useBreakpointValue({
-    base: true,
-    sm: true,
-    md: true,
-    lg: false,
-    xl: false,
-  });
-  const { colorMode } = useColorMode();
-  const isDarkMode = colorMode === "dark";
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 0) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
 
-  const bgColor = isDarkMode ? "#121212" : "white";
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  const bgColor = useColorModeValue("white", "gray.700");
+
+  const languageOptions = [
+    {
+      value: "am",
+      label: (
+        <>
+          <span role="img" aria-label="Amharic">
+            🇪🇹
+          </span>{" "}
+          Amharic
+        </>
+      ),
+    },
+
+    {
+      value: "en",
+      label: (
+        <>
+          <span role="img" aria-label="English">
+            🇺🇸
+          </span>{" "}
+          English
+        </>
+      ),
+    },
+    {
+      value: "es",
+      label: (
+        <>
+          <span role="img" aria-label="Spanish">
+            🇪🇸
+          </span>{" "}
+          Spanish
+        </>
+      ),
+    },
+    {
+      value: "fr",
+      label: (
+        <>
+          <span role="img" aria-label="French">
+            🇫🇷
+          </span>{" "}
+          French
+        </>
+      ),
+    },
+    {
+      value: "pt",
+      label: (
+        <>
+          <span role="img" aria-label="Portuguese">
+            🇵🇹
+          </span>{" "}
+          Portuguese
+        </>
+      ),
+    },
+    {
+      value: "ru",
+      label: (
+        <>
+          <span role="img" aria-label="Russian">
+            🇷🇺
+          </span>{" "}
+          Russian
+        </>
+      ),
+    },
+    {
+      value: "zh",
+      label: (
+        <>
+          <span role="img" aria-label="Chinese">
+            🇨🇳
+          </span>{" "}
+          Chinese
+        </>
+      ),
+    },
+  ];
 
   return (
-    <Flex
+    <Box
       width="100%"
-      padding={2}
-      style={{ position: "sticky", top: 0, zIndex: 100 }}
-      bg={bgColor}
+      bg={isScrolled ? "" : bgColor}
+      boxShadow={isScrolled ? "md" : "none"}
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+        backdropFilter: isScrolled ? "blur(10px)" : "none",
+        WebkitBackdropFilter: isScrolled ? "blur(10px)" : "none",
+        transition: "backdrop-filter 0.3s ease-in-out",
+      }}
     >
-      <HStack
-        justify={isSmallScreen ? "space-between" : "flex-start"}
-        flex={1}
-        spacing={isSmallScreen ? 0 : 3}
-      >
-        {logoDisplay && (
-          <Link to="/">
-            <Image
-              src={logo}
-              alt="logo"
-              objectFit="cover"
-              w={"40px"}
-              h="35px"
-              minW="40px"
-              minH="35px"
-              borderRadius={3}
-            />
-          </Link>
-        )}
-
-        <SearchInput />
-        <HStack spacing={3} borderRadius="full" ml="2">
-          {currUser?.role === "admin" ? (
-            <>
-              <Text>{currUser.name}</Text>
-              {!isOpen && (
-                <Avatar
-                  src={defaultUserImage}
-                  boxSize="40px"
-                  name={currUser?.name}
-                  ml={-1}
-                  mr={2}
-                  onClick={onOpen}
+      <Center>
+        <Flex
+          padding={2}
+          alignItems="center"
+          justifyContent="space-between"
+          align="center"
+          maxW="1440px"
+          width="100%"
+        >
+          {/* Left Section */}
+          <HStack spacing={3}>
+            <Link to="/">
+              <HStack>
+                <Image
+                  src={logo}
+                  alt="logo"
+                  objectFit="cover"
+                  width="35px"
+                  height="30px"
+                  borderRadius={3}
                 />
-              )}
-              <Setting isOpen={isOpen} onOpen={onOpen} onClose={onClose} />
+                <Text
+                  align="center"
+                  fontWeight="bold"
+                  fontSize={isSmallScreen ? "18px" : "22px"}
+                  display={isSmallScreen ? "none" : "block"}
+                  fontFamily="sans-serif"
+                  color={useColorModeValue("#333", "#fbad5c")}
+                >
+                  Sabbath School
+                </Text>
+              </HStack>
+            </Link>
+          </HStack>
+
+          {/* Right Section */}
+          <HStack spacing={{ base: 4, md: 6 }}>
+            <>
+              <Select
+                options={languageOptions}
+                defaultValue={languageOptions[0]}
+                styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    minWidth: 120,
+                    backgroundColor: useColorModeValue("white", "gray.700"),
+                    color: useColorModeValue("black", "white"),
+                    borderColor: state.isFocused
+                      ? useColorModeValue("gray.300", "gray.600")
+                      : useColorModeValue("gray.200", "gray.700"),
+                    boxShadow: state.isFocused
+                      ? `0 0 0 1px ${useColorModeValue("gray.300", "gray.600")}`
+                      : "none",
+                    "&:hover": {
+                      borderColor: useColorModeValue("gray.300", "gray.600"),
+                    },
+                  }),
+                  singleValue: (base) => ({
+                    ...base,
+                    color: useColorModeValue("black", "white"),
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    backgroundColor: useColorModeValue("white", "gray.700"),
+                    color: useColorModeValue("black", "white"),
+                  }),
+                }}
+                onChange={(selectedOption) => {
+                  setLanguage(selectedOption?.value ?? "am");
+                }}
+              />
+              <ColorModeSwitch />
             </>
-          ) : !logoDisplay ? (
-            <ColorModeSwitch />
-          ) : (
-            !isOpen && (
-              <Box onClick={onOpen}>
-                <AiOutlineMenu size={30} />
-              </Box>
-            )
-          )}
-          <Setting isOpen={isOpen} onOpen={onOpen} onClose={onClose} />
-        </HStack>
-      </HStack>
-    </Flex>
+          </HStack>
+        </Flex>
+      </Center>
+    </Box>
   );
 };
 

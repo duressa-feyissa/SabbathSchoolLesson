@@ -1,107 +1,153 @@
-import { useParams, Link } from "react-router-dom";
 import {
-  Heading,
-  HStack,
-  VStack,
-  Text,
+  Badge,
   Box,
   Button,
-  Badge,
-  SimpleGrid,
+  Flex,
+  Heading,
+  Image,
   Spinner,
+  Text,
+  useBreakpointValue,
   useColorMode,
+  useColorModeValue,
+  VStack,
 } from "@chakra-ui/react";
-import { useLangQueryStore } from "../store";
-import useAuth from "../hooks/useAuth";
-import Icon from "./Icon";
-import { AddIcon, EditIcon } from "@chakra-ui/icons";
-import useDays from "../hooks/useDays";
+import { format, parse } from "date-fns";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import useDay from "../hooks/useDay";
 import useLesson from "../hooks/useLesson";
-import DeleteDay from "./DeleteDayButton";
 
 const Lesson = () => {
-  const currUser = useAuth();
-  const { quarterId = "", lessonId = "" } = useParams<{
+  const { quarterId, lessonId } = useParams<{
     quarterId: string;
     lessonId: string;
   }>();
 
+  const validQuarterId = quarterId || "";
+  const validLessonId = lessonId || "";
+
+  const { data, isLoading } = useLesson(validQuarterId, validLessonId);
+
   const { colorMode } = useColorMode();
   const isDarkMode = colorMode === "dark";
   const color = isDarkMode ? "green.100" : "green.900";
-  const validQuarterId = quarterId || "";
-  const language = useLangQueryStore((state) => state.language);
-  const { data: lesson } = useLesson(language, validQuarterId, lessonId);
-  const { data: days, isLoading, refetch } = useDays(validQuarterId, lessonId);
 
-  days?.sort((a, b) => {
-    return parseInt(a.id) - parseInt(b.id);
-  });
+  const [selectedDay, setSelectedDay] = useState(0);
 
-  const handleFetch = () => refetch();
+  const { data: day } = useDay(
+    validQuarterId,
+    validLessonId,
+    data?.days[selectedDay]?.id || ""
+  );
 
-  if (isLoading) return <Spinner alignSelf={"center"} />;
+  const dayButtonVariant = useBreakpointValue({ base: "ghost", md: "outline" });
+  const weekDays: { [key: string]: string } = {
+    "01": "Saturday",
+    "02": "Sunday",
+    "03": "Monday",
+    "04": "Tuesday",
+    "05": "Wednesday",
+    "06": "Thursday",
+    "07": "Friday",
+  };
 
-  return !days ? (
-    <Heading size={"lg"} margin={"auto"} textAlign={"center"}>
-      Coming Soon...
-    </Heading>
-  ) : (
-    <VStack mt="4" width={"100%"} paddingX={"12px"}>
-      <Heading size={"xl"} margin={"auto"} textAlign={"center"} color={color}>
-        {lesson?.title}
-      </Heading>
-      <Text
-        mb={"2"}
-        textAlign={"center"}
-        color={color}
-        width={{ base: "95%", lg: "70%" }}
-      >
-        {lesson?.memorial_script}
-      </Text>
-      <Box justifySelf={"flex-start"} w={{ base: "90%", lg: "50%", xl: "50%" }}>
-        <Link
-          to={`/admin/languages/${language}/quarters/${quarterId}/lessons/${lessonId}/days/add`}
+  const formatDate = (dateString: string) => {
+    const date = parse(dateString, "dd/MM/yyyy", new Date());
+    return format(date, "MMMM dd, yyyy");
+  };
+
+  if (isLoading) {
+    return (
+      <Flex justify="center" align="center" height="100vh">
+        <Spinner size="xl" />
+      </Flex>
+    );
+  }
+
+  if (!data) {
+    return <Text>Error: Lesson data not found.</Text>;
+  }
+
+  const lesson = data.lesson;
+  const days = data.days || [];
+
+  return (
+    <VStack mt="4" width={"100%"} paddingX={"12px"} spacing={6}>
+      <Flex width="100%" direction={{ base: "column", md: "row" }} gap={6}>
+        <Box
+          flex={{ base: "none", md: "1" }}
+          width={{ base: "100%", md: "30%" }}
+          paddingX={{ base: 0, md: 4 }}
         >
-          {currUser?.role === "admin" && (
-            <Icon colorScheme="teal" icon={AddIcon} />
-          )}{" "}
-        </Link>
-      </Box>
-      <Box>
-        <SimpleGrid columns={{ base: 1 }} spacing={5}>
-          {days?.map((day, index) => (
-            <HStack key={day.id} spacing={4} justify={"flex-start"}>
-              <Link to={`days/0${index + 1}`} key={index}>
-                <VStack key={day.id} align={"flex-start"}>
-                  <Button variant="ghost">
-                    <HStack>
-                      <Badge
-                        colorScheme="green"
-                        fontSize="23px"
-                        borderRadius="4px"
-                      >
-                        {day.day}
-                      </Badge>
-                      <Text color={color}>{day.title}</Text>
-                    </HStack>
-                  </Button>
-                </VStack>
-              </Link>
-              {currUser?.role === "admin" && (
-                <>
-                  <Link
-                    to={`/admin/languages/${language}/quarters/${quarterId}/lessons/${lessonId}/days/${day.id}/edit`}
-                  >
-                    <EditIcon color="blue.500" cursor="pointer" />
-                  </Link>
-                  <DeleteDay refetch={handleFetch} dayId={day.id} />
-                </>
-              )}
-            </HStack>
-          ))}
-        </SimpleGrid>
-      </Box>
+          <Image
+            src={lesson.cover}
+            alt={lesson.title}
+            borderRadius="lg"
+            width="100%"
+            maxHeight="400px"
+            objectFit="cover"
+            mb={4}
+          />
+          <Heading size={"xl"} textAlign={"center"} color={color} mb={4}>
+            {lesson.title}
+          </Heading>
+          <Text fontSize="md" color="gray.500" textAlign={"center"}>
+            {formatDate(lesson.start_date)} - {formatDate(lesson.end_date)}
+          </Text>
+          <Flex flexDirection={{ base: "row", lg: "column" }} mt={4}>
+            {days.map((day, index) => (
+              <Button
+                key={day.id}
+                onClick={() => setSelectedDay(index)}
+                variant={index === selectedDay ? "solid" : dayButtonVariant}
+                width="100%"
+                marginBottom={{ base: 2, md: 4 }}
+                display="flex"
+                alignItems="center"
+                justifyContent="flex-start"
+                bg={index === selectedDay ? "teal.400" : undefined}
+                color={index === selectedDay ? "white" : color}
+              >
+                <Badge colorScheme="green" fontSize="md" borderRadius="4px">
+                  {day.id}
+                </Badge>
+                <Text ml={2} display={{ base: "none", lg: "block" }}>
+                  {day.title}
+                </Text>
+              </Button>
+            ))}
+          </Flex>
+        </Box>
+
+        <Box
+          flex={{ base: "none", md: "2" }}
+          paddingX={{ base: 0, md: 4 }}
+          width={{ base: "100%", md: "70%" }}
+          borderColor={useColorModeValue("gray.200", "gray.700")}
+          pl={{ md: 4 }}
+        >
+          <VStack align="flex-start" spacing={2}>
+            <Heading size="lg" color={color}>
+              {days[selectedDay]?.title}
+            </Heading>
+            <Text fontSize="md" color="gray.500">
+              {weekDays[days[selectedDay]?.id]} |{" "}
+              {formatDate(days[selectedDay]?.date)}
+            </Text>
+            <Box
+              as="div"
+              display={"flex"}
+              flexDirection={"column"}
+              gap={{ base: 4, md: 6 }}
+              dangerouslySetInnerHTML={{
+                __html: day?.content || "<p>Content not found</p>",
+              }}
+              width="100%"
+            />
+          </VStack>
+        </Box>
+      </Flex>
     </VStack>
   );
 };

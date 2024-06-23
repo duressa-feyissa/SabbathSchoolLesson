@@ -3,12 +3,12 @@ import logo from "../images/logo.jpg";
 
 import {
   Box,
-  Text,
+  Divider,
   HStack,
   Image,
+  Text,
   VStack,
   useColorMode,
-  Divider,
 } from "@chakra-ui/react";
 import MenuBar from "./MenuBar";
 

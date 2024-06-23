@@ -2,36 +2,30 @@ import {
   Box,
   Card,
   Heading,
+  HStack,
   Image,
   Text,
-  HStack,
   useColorMode,
 } from "@chakra-ui/react";
-import { Link, useParams } from "react-router-dom";
-import { EditIcon, AddIcon } from "@chakra-ui/icons";
-import useAuth from "../hooks/useAuth";
+import { Link } from "react-router-dom";
 import Quarter from "../entities/Quarter";
 import { useLangQueryStore } from "../store";
 import QuarterNumber from "./QuarterNumber";
-import Icon from "./Icon";
-import DeleteQuarter from "./DeleteQuarter";
 
 interface Props {
   quarter: Quarter;
   refetch?: () => void;
 }
 
-const QuarterCard = ({ quarter, refetch }: Props) => {
+const QuarterCard = ({ quarter }: Props) => {
   const { colorMode } = useColorMode();
-  const { lang } = useParams<{ lang: string }>();
   const isDarkMode = colorMode === "dark";
   const color = isDarkMode ? "green.100" : "green.900";
   const language = useLangQueryStore((state) => state.language);
-  const currUser = useAuth();
 
   return (
     <Card>
-      <Box p={3}>
+      <Box p={5}>
         <Text fontSize="14px" textAlign="justify">
           <Image
             src={quarter.cover}
@@ -47,7 +41,9 @@ const QuarterCard = ({ quarter, refetch }: Props) => {
             </Heading>
           </Link>
           <Text lineHeight="1.5" color={color}>
-            {quarter.description}
+            {quarter.description.length > 200
+              ? `${quarter.description.substring(0, 200)}...`
+              : quarter.description}
           </Text>
         </Text>
         <HStack justify="space-between" mt={3}>
@@ -59,29 +55,7 @@ const QuarterCard = ({ quarter, refetch }: Props) => {
             {quarter.human_date}
           </Text>
 
-          {currUser && currUser.role === "admin" && (
-            <HStack spacing={3}>
-              <QuarterNumber quarter={quarter.id.slice(5)} />
-              {lang && (
-                <>
-                  <Link
-                    to={`/admin/languages/${lang}/quarters/${quarter.id}/lessons/add`}
-                  >
-                    <Icon colorScheme="teal" icon={AddIcon} />
-                  </Link>
-                  <Link
-                    to={`/admin/languages/${lang}/quarters/${quarter.id}/edit`}
-                  >
-                    <Icon colorScheme="blue" icon={EditIcon} />
-                  </Link>
-                  <DeleteQuarter quarterId={quarter.id} refetch={refetch} />
-                </>
-              )}
-            </HStack>
-          )}
-          {currUser?.role !== "admin" && (
-            <QuarterNumber quarter={quarter.id.slice(5)} />
-          )}
+          <QuarterNumber quarter={quarter.id.slice(5)} />
         </HStack>
       </Box>
     </Card>
